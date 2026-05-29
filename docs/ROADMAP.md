@@ -8,7 +8,7 @@ Document de suivi pour implémenter le plan lean. Mettre à jour les cases à ch
 - [x] Drizzle + Postgres/PostGIS (migration `0000_*`)
 - [x] `GET /health`, `GET /ready`, `GET /v1/config`
 - [x] Docker Compose local, `.env.example`
-- [x] ESLint, Vitest, CI-ready scripts
+- [x] ESLint, Vitest, CI GitHub Actions
 
 ## Phase 1 — Auth ✅
 
@@ -22,32 +22,30 @@ Document de suivi pour implémenter le plan lean. Mettre à jour les cases à ch
 
 **Hors scope (issue GitHub)** : phone verification, passkeys.
 
-## Phase 2 — Items + médias
+## Phase 2 — Items + médias ✅
 
-- [ ] `src/lib/storage/r2.ts` — presigned PUT
-- [ ] Routes items CRUD (`draft` → `available`)
-- [ ] `POST /v1/items/:id/photos/presign`
-- [ ] `POST /v1/items/:id/photos/confirm` — IA sync 3-5s, `ai_metadata`
-- [ ] Variantes image (thumbnail + full) dans R2
-- [ ] `moderation_status` : auto-approve en dev, pending en prod
+- [x] `src/lib/storage/r2.ts` — presigned PUT (+ dev local fallback)
+- [x] Routes items CRUD (`draft` → `available`)
+- [x] `POST /v1/items/:id/photos/presign`
+- [x] `POST /v1/items/:id/photos/confirm` — IA sync, `ai_metadata`
+- [x] Variantes image (thumbnail + full) via sharp
+- [x] `moderation_status` : auto-approve si `AUTO_APPROVE_PHOTOS=true`
 
-Fichiers à créer : `src/routes/items.ts`, `src/services/item.service.ts`, `src/lib/ai/enrich.ts`
+## Phase 3 — Swipes + matches ✅
 
-## Phase 3 — Swipes + matches
+- [x] `POST /v1/swipes` — `{ itemId, direction }`
+- [x] `GET /v1/swipes` — historique paginé
+- [x] `MatchService` — réciprocité + `ON CONFLICT DO NOTHING`
+- [x] Test Vitest paire canonique + contrat duplicate prevention
+- [x] `GET /v1/matches` — liste matches actifs
+- [x] `GET /v1/items/feed` — feed swipe
 
-- [ ] `POST /v1/swipes` — `{ item_id, direction }`
-- [ ] `GET /v1/swipes` — historique paginé
-- [ ] `src/services/match.service.ts` — réciprocité + `ON CONFLICT DO NOTHING`
-- [ ] Test Vitest : création match concurrente → un seul row
-- [ ] `GET /v1/matches` — liste matches actifs
-- [ ] Feed swipe : items `available`, photos `approved`, hors déjà swipés
+## Phase 4 — Chat + zones ✅
 
-## Phase 4 — Chat + zones
-
-- [ ] `GET/POST /v1/conversations/:id/messages` — polling `?since=`
-- [ ] `GET /v1/zones/nearby` — jauge densité
-- [ ] Job `zone-stats` (cron Railway)
-- [ ] Jobs cleanup : magic links, refresh tokens
+- [x] `GET/POST /v1/conversations/:id/messages` — polling `?since=`
+- [x] `GET /v1/conversations/by-match/:matchId`
+- [x] `GET /v1/zones/nearby` — jauge densité
+- [x] Jobs : `pnpm job zone-stats|expire-magic-links|refresh-token-prune`
 
 ## Reporté post-MVP
 
@@ -61,7 +59,7 @@ Fichiers à créer : `src/routes/items.ts`, `src/services/item.service.ts`, `src
 ## Ordre recommandé
 
 ```
-Auth ✅ → Items/R2/IA → Swipes/Match → Chat/Zones
+Auth ✅ → Items/R2/IA ✅ → Swipes/Match ✅ → Chat/Zones ✅
 ```
 
-Estimation solo : ~1 semaine restante pour un beta swipeable après Phase 0-1.
+Prochaine étape produit : app mobile + beta 11e.

@@ -16,9 +16,12 @@
     "lint": "eslint src --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "job": "tsx src/jobs/run.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1056.0",
+    "@aws-sdk/s3-request-presigner": "^3.1056.0",
     "@fastify/cors": "^11.2.0",
     "@fastify/jwt": "^10.1.0",
     "@fastify/rate-limit": "^10.3.0",
@@ -31,13 +34,16 @@
     "fastify-type-provider-zod": "^6.1.0",
     "google-auth-library": "^10.6.2",
     "nanoid": "^5.1.11",
+    "openai": "^6.39.1",
     "postgres": "^3.4.9",
     "resend": "^6.12.4",
+    "sharp": "^0.34.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.9.1",
+    "@types/sharp": "^0.32.0",
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.4.0",

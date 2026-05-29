@@ -39,9 +39,9 @@ Fastify + TypeScript + Drizzle + Postgres/PostGIS. Auth: Apple, Google, magic li
 
 ## Status
 
-- [x] Scaffold, health, config, OpenAPI
+- [x] Scaffold, health, config, OpenAPI, CI
 - [x] Auth (OAuth, magic link, JWT refresh)
-- [x] Database schema (users, items, swipes, matches, …)
-- [ ] Items + R2 upload + IA enrichment
-- [ ] Swipes + match detection
-- [ ] Chat (polling) + zones
+- [x] Database schema + migrations
+- [x] Items + R2 upload + IA enrichment
+- [x] Swipes + match detection
+- [x] Chat (polling) + zones + cron jobs

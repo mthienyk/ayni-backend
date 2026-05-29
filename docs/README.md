@@ -4,7 +4,7 @@
 
 1. [operations/local-dev.md](operations/local-dev.md) — lancer l'API en local
 2. [architecture/overview.md](architecture/overview.md) — stack, schéma, règles métier
-3. [ROADMAP.md](ROADMAP.md) — **suivi du plan** (phases, cases à cocher)
+3. [ROADMAP.md](ROADMAP.md) — suivi du plan (phases complétées)
 
 ## Fichiers
 
@@ -20,39 +20,40 @@
 
 Vision produit : [concept.md](../concept.md) à la racine du repo.
 
-## API (implémenté aujourd'hui)
+## API (implémenté)
 
-| Méthode | Route | Auth |
-|---------|-------|------|
-| GET | `/health` | — |
-| GET | `/ready` | — |
-| GET | `/v1/config` | — |
-| POST | `/v1/auth/oauth` | — |
-| POST | `/v1/auth/magic-link` | — |
-| POST | `/v1/auth/magic-link/verify` | — |
-| GET | `/v1/auth/magic-link/verify` | — |
-| POST | `/v1/auth/refresh` | — |
-| POST | `/v1/auth/logout` | — |
-| GET | `/v1/auth/me` | JWT |
-| PATCH | `/v1/auth/me` | JWT |
+| Domaine | Routes |
+|---------|--------|
+| System | `GET /health`, `GET /ready`, `GET /v1/config` |
+| Auth | `POST /v1/auth/oauth`, magic-link, refresh, logout, `GET/PATCH /me` |
+| Items | `POST /v1/items`, `GET /feed`, `PATCH /:id`, `POST /:id/publish`, photos presign/confirm |
+| Swipes | `POST /v1/swipes`, `GET /v1/swipes` |
+| Matches | `GET /v1/matches` |
+| Chat | `GET/POST /v1/conversations/:id/messages`, `GET /by-match/:matchId` |
+| Zones | `GET /v1/zones/nearby?lat=&lng=` |
 
-OpenAPI interactif : `/docs` (généré depuis Zod, pas de YAML manuel).
+OpenAPI interactif : `/docs`
+
+## Jobs cron (Railway)
+
+```bash
+pnpm job zone-stats
+pnpm job expire-magic-links
+pnpm job refresh-token-prune
+```
 
 ## Structure code
 
 ```
 src/
-  server.ts          # entrypoint
-  app.ts             # Fastify bootstrap
   routes/            # HTTP + schemas Zod
   services/          # logique métier + Drizzle
-  db/schema/         # tables Drizzle
-  db/migrations/     # SQL versionné
-  lib/               # config, auth, crypto, email
-  plugins/           # JWT guard
+  lib/storage/r2.ts  # R2 + fallback local dev
+  lib/ai/enrich.ts   # enrichissement vision sync
+  jobs/run.ts        # entrypoint cron
 ```
 
-Convention : **route → service → Drizzle** (pas de repository layer).
+Convention : **route → service → Drizzle**
 
 ## Backlog produit (issues, pas doc)
 

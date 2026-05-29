@@ -10,10 +10,15 @@ import {
   validatorCompiler,
   type ZodTypeProvider,
 } from "fastify-type-provider-zod";
-import { env, getCorsOrigins } from "./lib/config.js";
+import { env, getCorsOrigins, isR2Configured } from "./lib/config.js";
 import { isAppError } from "./lib/errors.js";
+import { saveLocalUpload } from "./lib/storage/r2.js";
 import { authRoutes } from "./routes/auth.js";
+import { conversationRoutes } from "./routes/conversations.js";
+import { itemRoutes } from "./routes/items.js";
 import { configRoutes, healthRoutes } from "./routes/system.js";
+import { matchRoutes, swipeRoutes } from "./routes/swipes.js";
+import { zoneRoutes } from "./routes/zones.js";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -30,6 +35,14 @@ export async function buildApp() {
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
+
+  if (!isR2Configured()) {
+    app.addContentTypeParser(
+      /^image\/.+|application\/octet-stream$/,
+      { parseAs: "buffer", bodyLimit: 10 * 1024 * 1024 },
+      (_req, body, done) => done(null, body),
+    );
+  }
 
   await app.register(cors, {
     origin: getCorsOrigins(),
@@ -106,9 +119,28 @@ export async function buildApp() {
     });
   });
 
+  if (!isR2Configured()) {
+    app.put("/v1/dev-upload/*", async (request, reply) => {
+      const key = decodeURIComponent(
+        (request.params as { "*": string })["*"],
+      );
+      const data = request.body;
+      if (!Buffer.isBuffer(data)) {
+        return reply.status(400).send({ error: "Expected raw image body" });
+      }
+      saveLocalUpload(key, data);
+      return reply.status(204).send();
+    });
+  }
+
   await app.register(healthRoutes);
   await app.register(configRoutes, { prefix: "/v1" });
   await app.register(authRoutes, { prefix: "/v1/auth" });
+  await app.register(itemRoutes, { prefix: "/v1/items" });
+  await app.register(swipeRoutes, { prefix: "/v1/swipes" });
+  await app.register(matchRoutes, { prefix: "/v1/matches" });
+  await app.register(conversationRoutes, { prefix: "/v1/conversations" });
+  await app.register(zoneRoutes, { prefix: "/v1/zones" });
 
   return app;
 }

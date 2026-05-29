@@ -128,6 +128,18 @@ Cron Railway + polling DB (`SELECT FOR UPDATE SKIP LOCKED`). Pas de Redis/BullMQ
 
 `GET /v1/config` → `minSupportedVersion`, `inviteBaseUrl`. Force update côté mobile si version trop ancienne.
 
+## Endpoints implémentés (MVP)
+
+| Domaine | Routes clés |
+|---------|-------------|
+| Items | `POST /v1/items`, `GET /feed`, `PATCH /:id`, `POST /:id/publish`, photos presign/confirm |
+| Swipes | `POST /v1/swipes`, `GET /v1/swipes` |
+| Matches | `GET /v1/matches` |
+| Chat | `GET/POST /v1/conversations/:id/messages?since=` |
+| Zones | `GET /v1/zones/nearby?lat=&lng=` |
+
+Dev sans R2 : upload local via `PUT /v1/dev-upload/:key`.
+
 ## Reporté post-MVP
 
 - Table `invitations` (tracking jauge)

@@ -24,9 +24,19 @@ const envSchema = z.object({
   R2_SECRET_ACCESS_KEY: z.string().optional(),
   R2_BUCKET_NAME: z.string().default("ayni-photos"),
   R2_PUBLIC_BASE_URL: z.string().optional(),
+  OPENAI_API_KEY: z.string().optional(),
+  OPENAI_VISION_MODEL: z.string().default("gpt-4o-mini"),
+  AI_ENRICH_TIMEOUT_MS: z.coerce.number().default(8000),
+  ZONE_UNLOCK_THRESHOLD: z.coerce.number().default(50),
+  SWIPE_RADIUS_METERS: z.coerce.number().default(5000),
+  AUTO_APPROVE_PHOTOS: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((v) => v === "true"),
   MIN_SUPPORTED_APP_VERSION: z.string().default("1.0.0"),
   INVITE_BASE_URL: z.string().url().default("https://ayni.app/invite"),
   CORS_ORIGINS: z.string().default("http://localhost:3000"),
+  LOCAL_UPLOAD_DIR: z.string().default("./uploads"),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -44,4 +54,12 @@ export const env = loadEnv();
 
 export function getCorsOrigins(): string[] {
   return env.CORS_ORIGINS.split(",").map((o) => o.trim());
+}
+
+export function isR2Configured(): boolean {
+  return !!(
+    env.R2_ACCOUNT_ID &&
+    env.R2_ACCESS_KEY_ID &&
+    env.R2_SECRET_ACCESS_KEY
+  );
 }

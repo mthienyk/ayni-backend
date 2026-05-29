@@ -62,6 +62,7 @@ export const itemPhotos = pgTable(
       .notNull()
       .references(() => items.id, { onDelete: "cascade" }),
     url: text("url").notNull(),
+    thumbnailUrl: text("thumbnail_url"),
     orderIndex: integer("order_index").notNull().default(0),
     isPrimary: boolean("is_primary").notNull().default(false),
     moderationStatus: moderationStatusEnum("moderation_status")
