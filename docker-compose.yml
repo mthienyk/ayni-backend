@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    platform: linux/amd64
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ayni
+      POSTGRES_PASSWORD: ayni
+      POSTGRES_DB: ayni
+    volumes:
+      - ayni_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ayni -d ayni"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  ayni_pg_data:
