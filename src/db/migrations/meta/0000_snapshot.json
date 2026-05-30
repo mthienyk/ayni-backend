@@ -1,5 +1,5 @@
 {
-  "id": "96bcb624-4677-4e14-beb3-26c8c39a5958",
+  "id": "370a41ac-4e99-4a22-a80e-f0b9f35fc267",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -320,9 +320,15 @@
           "primaryKey": false,
           "notNull": false
         },
-        "home_location": {
-          "name": "home_location",
-          "type": "geometry(Point, 4326)",
+        "home_lat": {
+          "name": "home_lat",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "home_lng": {
+          "name": "home_lng",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": false
         },
@@ -443,11 +449,24 @@
           "primaryKey": false,
           "notNull": true
         },
-        "polygon": {
-          "name": "polygon",
-          "type": "geometry(Polygon, 4326)",
+        "center_lat": {
+          "name": "center_lat",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": true
+        },
+        "center_lng": {
+          "name": "center_lng",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "radius_meters": {
+          "name": "radius_meters",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1000
         },
         "h3_index": {
           "name": "h3_index",
@@ -528,6 +547,12 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "thumbnail_url": {
+          "name": "thumbnail_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "order_index": {
           "name": "order_index",
@@ -652,9 +677,15 @@
           "notNull": true,
           "default": "'draft'"
         },
-        "location": {
-          "name": "location",
-          "type": "geometry(Point, 4326)",
+        "location_lat": {
+          "name": "location_lat",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location_lng": {
+          "name": "location_lng",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": false
         },

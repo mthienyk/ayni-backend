@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import {
   boolean,
+  doublePrecision,
   index,
   integer,
   jsonb,
@@ -10,7 +11,6 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-import { geometryPoint } from "./geo.js";
 import { users } from "./auth.js";
 import { zones } from "./zones.js";
 
@@ -40,7 +40,8 @@ export const items = pgTable(
     priceMin: integer("price_min"),
     priceMax: integer("price_max"),
     status: itemStatusEnum("status").notNull().default("draft"),
-    location: geometryPoint("location"),
+    locationLat: doublePrecision("location_lat"),
+    locationLng: doublePrecision("location_lng"),
     zoneId: uuid("zone_id").references(() => zones.id),
     aiMetadata: jsonb("ai_metadata").$type<Record<string, unknown>>(),
     createdAt: timestamp("created_at", { withTimezone: true })

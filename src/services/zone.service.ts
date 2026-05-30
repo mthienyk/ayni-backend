@@ -1,9 +1,10 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
 import type { Database } from "../db/index.js";
 import { users, zones } from "../db/schema/index.js";
+import type { GeoPoint } from "../db/schema/geo.js";
+import { geoPointFromColumns } from "../db/schema/geo.js";
 import { env } from "../lib/config.js";
 import { AppError } from "../lib/errors.js";
-import type { GeoPoint } from "../db/schema/geo.js";
 
 export type ZoneNearbyDto = {
   zone: {
@@ -30,7 +31,8 @@ export class ZoneService {
       throw new AppError("USER_NOT_FOUND", "User not found", 404);
     }
 
-    const point = location ?? user.homeLocation;
+    const point =
+      location ?? geoPointFromColumns(user.homeLng, user.homeLat);
     if (!point) {
       return { zone: null, userCountInZone: 0 };
     }
@@ -38,7 +40,7 @@ export class ZoneService {
     if (location) {
       await this.db
         .update(users)
-        .set({ homeLocation: location })
+        .set({ homeLat: location.lat, homeLng: location.lng })
         .where(eq(users.id, userId));
     }
 
@@ -52,10 +54,20 @@ export class ZoneService {
       SELECT id, name, h3_index, current_user_count, threshold_unlocked_at
       FROM zones
       WHERE deleted_at IS NULL
-        AND ST_Contains(
-          polygon,
-          ST_SetSRID(ST_MakePoint(${point.lng}, ${point.lat}), 4326)
+        AND (
+          6371000 * acos(
+            cos(radians(${point.lat})) * cos(radians(center_lat))
+            * cos(radians(center_lng) - radians(${point.lng}))
+            + sin(radians(${point.lat})) * sin(radians(center_lat))
+          )
+        ) <= radius_meters
+      ORDER BY (
+        6371000 * acos(
+          cos(radians(${point.lat})) * cos(radians(center_lat))
+          * cos(radians(center_lng) - radians(${point.lng}))
+          + sin(radians(${point.lat})) * sin(radians(center_lat))
         )
+      )
       LIMIT 1
     `);
 

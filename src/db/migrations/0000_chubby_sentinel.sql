@@ -1,4 +1,3 @@
-CREATE EXTENSION IF NOT EXISTS postgis;--> statement-breakpoint
 CREATE TYPE "public"."auth_provider" AS ENUM('apple', 'google', 'email');--> statement-breakpoint
 CREATE TYPE "public"."user_status" AS ENUM('active', 'suspended');--> statement-breakpoint
 CREATE TYPE "public"."item_status" AS ENUM('draft', 'available', 'matched', 'traded', 'withdrawn');--> statement-breakpoint
@@ -38,7 +37,8 @@ CREATE TABLE "users" (
 	"avatar_url" text,
 	"email" text,
 	"phone" text,
-	"home_location" geometry(Point, 4326),
+	"home_lat" double precision,
+	"home_lng" double precision,
 	"home_zone_id" uuid,
 	"invite_code" text NOT NULL,
 	"invited_by_user_id" uuid,
@@ -51,7 +51,9 @@ CREATE TABLE "users" (
 CREATE TABLE "zones" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" text NOT NULL,
-	"polygon" geometry(Polygon, 4326) NOT NULL,
+	"center_lat" double precision NOT NULL,
+	"center_lng" double precision NOT NULL,
+	"radius_meters" integer DEFAULT 1000 NOT NULL,
 	"h3_index" text,
 	"current_user_count" integer DEFAULT 0 NOT NULL,
 	"threshold_unlocked_at" timestamp with time zone,
@@ -63,6 +65,7 @@ CREATE TABLE "item_photos" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"item_id" uuid NOT NULL,
 	"url" text NOT NULL,
+	"thumbnail_url" text,
 	"order_index" integer DEFAULT 0 NOT NULL,
 	"is_primary" boolean DEFAULT false NOT NULL,
 	"moderation_status" "moderation_status" DEFAULT 'pending' NOT NULL,
@@ -78,7 +81,8 @@ CREATE TABLE "items" (
 	"price_min" integer,
 	"price_max" integer,
 	"status" "item_status" DEFAULT 'draft' NOT NULL,
-	"location" geometry(Point, 4326),
+	"location_lat" double precision,
+	"location_lng" double precision,
 	"zone_id" uuid,
 	"ai_metadata" jsonb,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,

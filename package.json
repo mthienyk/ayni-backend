@@ -38,14 +38,14 @@
     "postgres": "^3.4.9",
     "resend": "^6.12.4",
     "sharp": "^0.34.5",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "drizzle-kit": "^0.31.10",
+    "dotenv": "^17.4.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.9.1",
     "@types/sharp": "^0.32.0",
-    "dotenv": "^17.4.2",
-    "drizzle-kit": "^0.31.10",
     "eslint": "^10.4.0",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3",

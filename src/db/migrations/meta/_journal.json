@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1780023804954,
-      "tag": "0000_classy_fat_cobra",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1780056846683,
-      "tag": "0001_clever_elektra",
+      "when": 1780159833561,
+      "tag": "0000_chubby_sentinel",
       "breakpoints": true
     }
   ]

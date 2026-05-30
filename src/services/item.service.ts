@@ -13,6 +13,7 @@ import {
   putObjectBuffer,
 } from "../lib/storage/r2.js";
 import type { GeoPoint } from "../db/schema/geo.js";
+import { geoPointFromColumns } from "../db/schema/geo.js";
 
 export type ItemPhotoDto = {
   id: string;
@@ -50,7 +51,7 @@ function toItemDto(
     priceMin: item.priceMin,
     priceMax: item.priceMax,
     status: item.status,
-    location: item.location ?? null,
+    location: geoPointFromColumns(item.locationLng, item.locationLat),
     zoneId: item.zoneId,
     aiMetadata: item.aiMetadata ?? null,
     photos: photos.map((p) => ({
@@ -77,7 +78,8 @@ export class ItemService {
       .values({
         ownerId: userId,
         zoneId: input.zoneId,
-        location: input.location,
+        locationLat: input.location?.lat,
+        locationLng: input.location?.lng,
         status: "draft",
       })
       .returning();
@@ -136,7 +138,8 @@ export class ItemService {
         description: input.description,
         priceMin: input.priceMin,
         priceMax: input.priceMax,
-        location: input.location,
+        locationLat: input.location?.lat,
+        locationLng: input.location?.lng,
         zoneId: input.zoneId,
       })
       .where(eq(items.id, itemId))

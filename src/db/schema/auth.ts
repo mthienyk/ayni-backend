@@ -7,8 +7,8 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  doublePrecision,
 } from "drizzle-orm/pg-core";
-import { geometryPoint } from "./geo.js";
 
 export const userStatusEnum = pgEnum("user_status", ["active", "suspended"]);
 
@@ -20,7 +20,8 @@ export const users = pgTable(
     avatarUrl: text("avatar_url"),
     email: text("email"),
     phone: text("phone"),
-    homeLocation: geometryPoint("home_location"),
+    homeLat: doublePrecision("home_lat"),
+    homeLng: doublePrecision("home_lng"),
     homeZoneId: uuid("home_zone_id"),
     inviteCode: text("invite_code").notNull(),
     invitedByUserId: uuid("invited_by_user_id"),

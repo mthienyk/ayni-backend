@@ -34,7 +34,6 @@ export async function healthRoutes(app: FastifyInstance): Promise<void> {
       return {
         status: ready ? ("ok" as const) : ("degraded" as const),
         database: ready,
-        postgis: ready,
       };
     },
   );

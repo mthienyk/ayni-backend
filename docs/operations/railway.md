@@ -1,44 +1,76 @@
 # Railway deployment
 
+Project: **ayni-backend**  
+Production URL: https://ayni-backend-production-d824.up.railway.app
+
 ## Services
 
-1. **API** — Node app, build `pnpm build`, start `pnpm start`
+1. **ayni-backend** — Node API (`pnpm build`, migrate + start via `railway.toml`)
 2. **Postgres** — Railway Postgres plugin
 
-## Environment variables
+## Environment variables (service `ayni-backend`)
 
-Copy all vars from `.env.example` into Railway service settings. Required at minimum:
+Required:
 
-- `DATABASE_URL` (injected by Postgres plugin)
-- `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` (32+ chars each)
-- `API_BASE_URL` (public Railway URL)
-- `MIN_SUPPORTED_APP_VERSION`, `INVITE_BASE_URL`
+| Variable | Value |
+|----------|-------|
+| `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` |
+| `NODE_ENV` | `production` |
+| `API_BASE_URL` | Public Railway URL (ex. `https://ayni-backend-production-d824.up.railway.app`) |
+| `JWT_ACCESS_SECRET` | 32+ chars random |
+| `JWT_REFRESH_SECRET` | 32+ chars random |
+| `MIN_SUPPORTED_APP_VERSION` | `1.0.0` |
+| `INVITE_BASE_URL` | `https://ayni.app/invite` |
+| `AUTO_APPROVE_PHOTOS` | `true` (beta) |
+| `CORS_ORIGINS` | Public API URL |
 
-OAuth and R2 vars when those features are enabled.
+Optional (enable when ready): `RESEND_API_KEY`, `GOOGLE_CLIENT_ID`, R2 vars, `OPENAI_API_KEY`.
 
-## PostGIS
+Set via CLI:
 
-After first deploy, connect to Postgres and run:
-
-```sql
-CREATE EXTENSION IF NOT EXISTS postgis;
+```bash
+railway link -p ayni-backend
+railway service ayni-backend
+railway variables set DATABASE_URL='${{Postgres.DATABASE_URL}}' API_BASE_URL=https://...
 ```
-
-If the initial migration already ran without PostGIS, run the command above then re-run migrations or verify geometry columns exist.
-
-Check readiness: `GET /ready` should return `postgis: true`.
 
 ## Migrations
 
-Run on deploy (build command or release phase):
+`railway.toml` runs `pnpm db:migrate && pnpm start` on each deploy.
+
+Migrations are also applied manually when needed:
 
 ```bash
-pnpm db:migrate
+railway run pnpm db:migrate
 ```
 
-## Cron jobs (Railway)
+If migrate fails on redeploy (hash mismatch), check `drizzle.__drizzle_migrations` in Postgres.
 
-Configure cron services pointing to scripts in `src/jobs/` (to be added):
+## PostGIS
+
+The default Railway Postgres plugin **does not include PostGIS**. The MVP schema uses `lat`/`lng` columns instead of geometry types so it runs on any Postgres.
+
+For full PostGIS later, provision a [Railway PostGIS template](https://railway.com/deploy/postgis) and point `DATABASE_URL` to it, then restore geometry columns in the schema.
+
+Local dev with PostGIS remains optional via `docker compose` (`postgis/postgis` image).
+
+## Health checks
+
+```bash
+curl https://ayni-backend-production-d824.up.railway.app/health
+curl https://ayni-backend-production-d824.up.railway.app/ready
+curl https://ayni-backend-production-d824.up.railway.app/v1/config
+```
+
+## Cron jobs
+
+Separate Railway cron services (or GitHub Actions):
+
+```bash
+pnpm job zone-stats
+pnpm job expire-magic-links
+pnpm job refresh-token-prune
+```
 
 | Job | Schedule |
 |-----|----------|
@@ -48,8 +80,4 @@ Configure cron services pointing to scripts in `src/jobs/` (to be added):
 
 ## Backups
 
-Enable daily Postgres backups on Railway. Verify point-in-time recovery availability on your plan before production.
-
-## Fallback
-
-If Railway Postgres lacks PostGIS on your plan, use [Neon](https://neon.tech) (PostGIS native) and set `DATABASE_URL` to the Neon connection string.
+Enable daily Postgres backups on Railway. Verify point-in-time recovery on your plan before production.

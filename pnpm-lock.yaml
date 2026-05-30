@@ -35,6 +35,12 @@ importers:
       apple-signin-auth:
         specifier: ^2.0.0
         version: 2.0.0
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
+      drizzle-kit:
+        specifier: ^0.31.10
+        version: 0.31.10
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(postgres@3.4.9)
@@ -75,12 +81,6 @@ importers:
       '@types/sharp':
         specifier: ^0.32.0
         version: 0.32.0
-      dotenv:
-        specifier: ^17.4.2
-        version: 17.4.2
-      drizzle-kit:
-        specifier: ^0.31.10
-        version: 0.31.10
       eslint:
         specifier: ^10.4.0
         version: 10.4.0

@@ -42,5 +42,4 @@ export const healthResponseSchema = z.object({
 export const readyResponseSchema = z.object({
   status: z.enum(["ok", "degraded"]),
   database: z.boolean(),
-  postgis: z.boolean(),
 });

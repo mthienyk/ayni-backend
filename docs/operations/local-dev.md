@@ -71,7 +71,7 @@ Sans `RESEND_API_KEY`, le lien magic est loggé dans la console du serveur :
 
 Connection string (default): `postgresql://ayni:ayni@localhost:5432/ayni`
 
-PostGIS is enabled in migration `0000_*` via `CREATE EXTENSION postgis`.
+PostGIS : optionnel en local (`postgis/postgis` dans docker-compose). En prod Railway, le schéma utilise `lat`/`lng` — voir [operations/railway.md](operations/railway.md).
 
 ## Tests
 
