@@ -110,7 +110,7 @@ export class AuthService {
     return this.issueTokens(user);
   }
 
-  async requestMagicLink(email: string): Promise<void> {
+  async requestMagicLink(email: string): Promise<{ devToken?: string }> {
     const normalized = normalizeEmail(email);
     const token = generateSecureToken();
     const lookupHash = hashTokenLookup(token);
@@ -137,6 +137,17 @@ export class AuthService {
     });
 
     await emailService.sendMagicLink(normalized, token);
+
+    if (env.NODE_ENV === "development" && env.DEV_AUTH_EXPOSE_TOKEN) {
+      this.logDevMagicLink(normalized, token);
+      return { devToken: token };
+    }
+
+    if (env.NODE_ENV === "development") {
+      this.logDevMagicLink(normalized, token);
+    }
+
+    return {};
   }
 
   async verifyMagicLink(input: {
@@ -420,6 +431,14 @@ export class AuthService {
       where: and(eq(users.inviteCode, inviteCode), isNull(users.deletedAt)),
     });
     return inviter?.id;
+  }
+
+  private logDevMagicLink(email: string, token: string): void {
+    const verifyUrl = `${env.API_BASE_URL}/v1/auth/magic-link/verify`;
+    console.info(`[dev:auth] Magic link for ${email}`);
+    console.info(
+      `  curl -X POST ${verifyUrl} -H "Content-Type: application/json" -d '${JSON.stringify({ token })}'`,
+    );
   }
 }
 

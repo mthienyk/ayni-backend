@@ -26,7 +26,32 @@ curl http://localhost:3000/v1/config
 
 OpenAPI UI: http://localhost:3000/docs
 
-## Test auth (curl)
+## Test auth (sans client)
+
+Avec `pnpm dev` en cours et `DEV_AUTH_EXPOSE_TOKEN=true` dans `.env` :
+
+```bash
+pnpm dev:login test@example.com
+```
+
+Le script demande un magic link, récupère le token, vérifie, et affiche `accessToken` + `refreshToken`.
+
+Contre **Railway** (email réel, pas de devToken) :
+
+```bash
+pnpm dev:login thienyx@gmail.com --api https://ayni-backend-production-d824.up.railway.app
+# puis coller le token reçu par email :
+pnpm dev:login thienyx@gmail.com --api https://... --token TOKEN_ICI
+```
+
+Les logs serveur (`pnpm dev`) affichent aussi une commande curl prête à l'emploi :
+
+```
+[dev:auth] Magic link for test@example.com
+  curl -X POST http://localhost:3000/v1/auth/magic-link/verify ...
+```
+
+## Test auth (curl manuel)
 
 Config :
 

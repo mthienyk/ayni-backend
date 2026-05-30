@@ -80,14 +80,17 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
         tags: ["Auth"],
         body: magicLinkBodySchema,
         response: {
-          200: z.object({ sent: z.literal(true) }),
+          200: z.object({
+            sent: z.literal(true),
+            devToken: z.string().optional(),
+          }),
           400: errorResponseSchema,
         },
       },
     },
     async (request) => {
-      await authService.requestMagicLink(request.body.email);
-      return { sent: true as const };
+      const result = await authService.requestMagicLink(request.body.email);
+      return { sent: true as const, devToken: result.devToken };
     },
   );
 

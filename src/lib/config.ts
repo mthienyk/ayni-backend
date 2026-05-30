@@ -39,6 +39,10 @@ const envSchema = z.object({
     .enum(["true", "false"])
     .default("true")
     .transform((v) => v === "true"),
+  DEV_AUTH_EXPOSE_TOKEN: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
   MIN_SUPPORTED_APP_VERSION: z.string().default("1.0.0"),
   INVITE_BASE_URL: z.string().url().default("https://joinayni.com/invite"),
   CORS_ORIGINS: z.string().default("http://localhost:3000"),

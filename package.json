@@ -18,7 +18,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "job": "tsx src/jobs/run.ts"
+    "job": "tsx src/jobs/run.ts",
+    "dev:login": "node scripts/dev-login.mjs",
+    "bootstrap:session": "tsx scripts/bootstrap-session.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1056.0",
