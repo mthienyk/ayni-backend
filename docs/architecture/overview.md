@@ -56,8 +56,23 @@ src/
 | Rate limits | 5 demandes / 15 min, 20 verify / 15 min / IP |
 | Pas d'énumération | `POST /magic-link` renvoie toujours `{ sent: true }` |
 | Comptes multi-provider | Même email OAuth ↔ magic link → même `users` row, identities liées |
+| Gatekeeping JWT | Middleware `authenticate` : JWT valide + user non supprimé + non suspendu |
 
-Flow mobile :
+### Signup = Sign in (passwordless)
+
+Pas de endpoints séparés. **Premier** magic link / OAuth → création compte. **Suivants** → login. Côté UI tu peux afficher « Se connecter » partout.
+
+### Durées des tokens
+
+| Token | Default | Env |
+|-------|---------|-----|
+| Magic link (email) | 15 min | `MAGIC_LINK_TTL_MINUTES` |
+| Access JWT | 15 min | `JWT_ACCESS_TTL` |
+| Refresh token | 30 jours | `JWT_REFRESH_TTL` |
+
+Renouvellement : `POST /v1/auth/refresh` avec le refresh token (rotation automatique).
+
+### Flow clients (web app + Expo)
 
 ```
 Email → https://joinayni.com/auth/magic-link?token=…
@@ -80,7 +95,18 @@ Module `src/lib/email/` — client Resend centralisé, templates HTML+texte, tag
 | `emailService.sendSupportRequest` | Formulaire support (équipe + accusé user) |
 
 Env : `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO`, `EMAIL_SUPPORT_TO` (optionnel).
-En dev sans clé Resend : emails loggés en console (`[dev:email]`).
+En dev sans clé Resend : emails loggés en console (`[dev:email]`). En dev, logs `[dev:auth]` avec curl verify même si Resend est actif.
+
+### Dev sans client
+
+| Commande | Usage |
+|----------|-------|
+| `pnpm dev:login <email>` | Local : magic link auto + session |
+| `pnpm dev:login <email> --api URL --token T` | Prod : token copié depuis l'email |
+| `pnpm dev:login <email> --name "Pseudo"` | Complète le profil si besoin |
+| `pnpm bootstrap:session <email>` | Ops : token en DB + verify (nécessite accès Postgres) |
+
+Session locale : `.ayni-session.json` (gitignored). `DEV_AUTH_EXPOSE_TOKEN=true` en local uniquement.
 
 ### Tables auth
 
@@ -138,9 +164,9 @@ Quand user A like l'item de B :
 
 Règle ambiguïté : plusieurs items par user → on matche sur la première paire réciproque trouvée.
 
-## IA enrichment (à implémenter)
+## IA enrichment
 
-Flow prévu **sync** au `POST .../photos/confirm` :
+Flow **sync** au `POST .../photos/confirm` (`src/lib/ai/enrich.ts`) :
 
 1. Upload R2 via presigned URL
 2. Appel vision LLM (~3-5s) → titre, fourchette prix, tags

@@ -12,7 +12,7 @@
 |---------|---------|
 | [ROADMAP.md](ROADMAP.md) | Plan d'implémentation, statut par phase |
 | [architecture/overview.md](architecture/overview.md) | Stack, auth, matching, IA, jobs |
-| [operations/local-dev.md](operations/local-dev.md) | Dev local + exemples curl |
+| [operations/local-dev.md](operations/local-dev.md) | Dev local, auth sans client, curl |
 | [operations/railway.md](operations/railway.md) | Deploy Railway |
 | [operations/cloudflare-r2.md](operations/cloudflare-r2.md) | Stockage photos |
 
@@ -34,6 +34,19 @@ Vision produit : [concept.md](../concept.md) à la racine du repo.
 
 OpenAPI interactif : `/docs`
 
+## Auth sans client (backend seul)
+
+Tant qu'il n'y a pas de web app / Expo :
+
+```bash
+pnpm dev:login you@example.com --name "Ton pseudo"              # local
+pnpm dev:login you@gmail.com --api https://... --token TOKEN   # prod (token depuis email)
+```
+
+Session sauvegardée dans `.ayni-session.json` (gitignored). Voir [operations/local-dev.md](operations/local-dev.md).
+
+Routes métier : **JWT Bearer obligatoire** (401 sans token). Middleware vérifie aussi user actif / non suspendu.
+
 ## Jobs cron (Railway)
 
 ```bash
@@ -48,9 +61,14 @@ pnpm job refresh-token-prune
 src/
   routes/            # HTTP + schemas Zod
   services/          # logique métier + Drizzle
+  lib/email/         # Resend transactionnel
   lib/storage/r2.ts  # R2 + fallback local dev
   lib/ai/enrich.ts   # enrichissement vision sync
+  plugins/auth.ts    # JWT + vérif user actif
   jobs/run.ts        # entrypoint cron
+scripts/
+  dev-login.mjs      # auth sans client
+  bootstrap-session.ts
 ```
 
 Convention : **route → service → Drizzle**

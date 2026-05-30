@@ -13,12 +13,17 @@ Document de suivi pour implémenter le plan lean. Mettre à jour les cases à ch
 ## Phase 1 — Auth ✅
 
 - [x] Tables `users`, `auth_identities`, `refresh_tokens`, `magic_link_tokens`
-- [x] `POST /v1/auth/oauth` (Apple, Google)
-- [x] `POST /v1/auth/magic-link` + verify (body + query pour liens email)
+- [x] Migration `0001` — `lookup_hash` magic link (lookup indexé)
+- [x] `POST /v1/auth/oauth` (Apple, Google) + account linking par email
+- [x] `POST /v1/auth/magic-link` + verify (POST only pour consommer le token)
+- [x] `GET /v1/auth/magic-link/verify` — redirect vers callback (legacy, ne consomme pas)
 - [x] `POST /v1/auth/refresh`, `POST /v1/auth/logout`
 - [x] `GET/PATCH /v1/auth/me`
-- [x] `inviteCode` au signup → `invited_by_user_id`
+- [x] Email Resend (`mail.joinayni.com`) + module transactionnel
 - [x] Refresh tokens rotatifs, hash Argon2
+- [x] JWT gatekeeping : user supprimé / suspendu rejeté sur routes protégées
+- [x] Scripts dev : `pnpm dev:login`, `pnpm bootstrap:session`
+- [x] `inviteCode` au signup → `invited_by_user_id`
 
 **Hors scope (issue GitHub)** : phone verification, passkeys.
 
@@ -62,4 +67,4 @@ Document de suivi pour implémenter le plan lean. Mettre à jour les cases à ch
 Auth ✅ → Items/R2/IA ✅ → Swipes/Match ✅ → Chat/Zones ✅
 ```
 
-Prochaine étape produit : app mobile + beta 11e.
+Prochaine étape produit : **web app + Expo** (page callback magic link) + beta 11e.

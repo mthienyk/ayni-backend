@@ -41,9 +41,13 @@ Required:
 | `JWT_ACCESS_SECRET` | 32+ chars random |
 | `JWT_REFRESH_SECRET` | 32+ chars random |
 | `MIN_SUPPORTED_APP_VERSION` | `1.0.0` |
-| `INVITE_BASE_URL` | `https://ayni.app/invite` |
+| `INVITE_BASE_URL` | `https://joinayni.com/invite` |
+| `MAGIC_LINK_CALLBACK_URL` | `https://joinayni.com/auth/magic-link` |
 | `AUTO_APPROVE_PHOTOS` | `true` (beta) |
-| `CORS_ORIGINS` | Public API URL |
+| `CORS_ORIGINS` | Public API URL (+ future web app origin) |
+| `JWT_ACCESS_TTL` | `15m` (default) |
+| `JWT_REFRESH_TTL` | `30d` (default) |
+| `MAGIC_LINK_TTL_MINUTES` | `15` (default) |
 
 Optional (enable when ready): `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO`, `GOOGLE_CLIENT_ID`, R2 vars, `OPENAI_API_KEY`.
 
@@ -57,12 +61,23 @@ Email (Resend, domain `mail.joinayni.com`):
 | `EMAIL_SUPPORT_TO` | Inbox for support requests (defaults to `EMAIL_REPLY_TO`) |
 | `MAGIC_LINK_CALLBACK_URL` | Web/Expo callback, e.g. `https://joinayni.com/auth/magic-link` |
 
+**Ne pas** définir `DEV_AUTH_EXPOSE_TOKEN` en production.
+
 Set via CLI:
 
 ```bash
 railway link -p ayni-backend
 railway service ayni-backend
-railway variables set DATABASE_URL='${{Postgres.DATABASE_URL}}' API_BASE_URL=https://...
+railway variables set MAGIC_LINK_CALLBACK_URL='https://joinayni.com/auth/magic-link'
+```
+
+## Test auth prod (sans client)
+
+```bash
+pnpm dev:login you@gmail.com \
+  --api https://ayni-backend-production-d824.up.railway.app \
+  --token TOKEN_FROM_EMAIL \
+  --name "Pseudo"
 ```
 
 ## Migrations
