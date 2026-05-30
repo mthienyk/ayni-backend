@@ -1,5 +1,10 @@
+import { createHash } from "node:crypto";
 import { hash, verify } from "@node-rs/argon2";
 import { nanoid } from "nanoid";
+
+export function hashTokenLookup(token: string): string {
+  return createHash("sha256").update(token).digest("hex").slice(0, 32);
+}
 
 export async function hashToken(token: string): Promise<string> {
   return hash(token, {

@@ -91,28 +91,6 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     },
   );
 
-  typed.post(
-    "/magic-link/verify",
-    {
-      schema: {
-        tags: ["Auth"],
-        body: magicLinkVerifyBodySchema,
-        response: {
-          200: tokenPairSchema,
-          401: errorResponseSchema,
-        },
-      },
-    },
-    async (request, reply) => {
-      const result = await authService.verifyMagicLink(request.body);
-      const accessToken = app.jwt.sign(
-        { sub: result.userId },
-        { expiresIn: app.config.JWT_ACCESS_TTL },
-      );
-      return reply.send(toTokenPairResponse(result, accessToken));
-    },
-  );
-
   typed.get(
     "/magic-link/verify",
     {
@@ -124,16 +102,34 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
           inviteCode: z.string().optional(),
         }),
         response: {
+          302: z.null(),
+        },
+      },
+    },
+    async (request, reply) => {
+      const redirectUrl = authService.buildMagicLinkCallbackUrl(
+        request.query.token,
+        request.query.inviteCode,
+      );
+      return reply.redirect(redirectUrl);
+    },
+  );
+
+  typed.post(
+    "/magic-link/verify",
+    {
+      config: { rateLimit: { max: 20, timeWindow: "15 minutes" } },
+      schema: {
+        tags: ["Auth"],
+        body: magicLinkVerifyBodySchema,
+        response: {
           200: tokenPairSchema,
           401: errorResponseSchema,
         },
       },
     },
     async (request, reply) => {
-      const result = await authService.verifyMagicLink({
-        token: request.query.token,
-        inviteCode: request.query.inviteCode,
-      });
+      const result = await authService.verifyMagicLink(request.body);
       const accessToken = app.jwt.sign(
         { sub: result.userId },
         { expiresIn: app.config.JWT_ACCESS_TTL },

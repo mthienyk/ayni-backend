@@ -8,6 +8,13 @@
       "when": 1780159833561,
       "tag": "0000_chubby_sentinel",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780164000000,
+      "tag": "0001_magic_link_lookup_hash",
+      "breakpoints": true
     }
   ]
 }

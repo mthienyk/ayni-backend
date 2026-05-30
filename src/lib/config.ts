@@ -17,8 +17,14 @@ const envSchema = z.object({
   APPLE_KEY_ID: z.string().optional(),
   APPLE_PRIVATE_KEY: z.string().optional(),
   MAGIC_LINK_TTL_MINUTES: z.coerce.number().default(15),
+  MAGIC_LINK_CALLBACK_URL: z
+    .string()
+    .url()
+    .default("https://joinayni.com/auth/magic-link"),
   RESEND_API_KEY: z.string().optional(),
-  EMAIL_FROM: z.string().email().default("noreply@ayni.app"),
+  EMAIL_FROM: z.string().email().default("noreply@mail.joinayni.com"),
+  EMAIL_REPLY_TO: z.string().email().optional(),
+  EMAIL_SUPPORT_TO: z.string().email().optional(),
   R2_ACCOUNT_ID: z.string().optional(),
   R2_ACCESS_KEY_ID: z.string().optional(),
   R2_SECRET_ACCESS_KEY: z.string().optional(),
@@ -34,7 +40,7 @@ const envSchema = z.object({
     .default("true")
     .transform((v) => v === "true"),
   MIN_SUPPORTED_APP_VERSION: z.string().default("1.0.0"),
-  INVITE_BASE_URL: z.string().url().default("https://ayni.app/invite"),
+  INVITE_BASE_URL: z.string().url().default("https://joinayni.com/invite"),
   CORS_ORIGINS: z.string().default("http://localhost:3000"),
   LOCAL_UPLOAD_DIR: z.string().default("./uploads"),
 });

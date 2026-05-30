@@ -93,6 +93,7 @@ export const magicLinkTokens = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     email: text("email").notNull(),
+    lookupHash: text("lookup_hash").notNull(),
     tokenHash: text("token_hash").notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     consumedAt: timestamp("consumed_at", { withTimezone: true }),
@@ -102,6 +103,7 @@ export const magicLinkTokens = pgTable(
   },
   (table) => [
     index("magic_link_tokens_email_idx").on(table.email),
+    index("magic_link_tokens_lookup_hash_idx").on(table.lookupHash),
     index("magic_link_tokens_token_hash_idx").on(table.tokenHash),
   ],
 );

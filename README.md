@@ -23,7 +23,8 @@ OpenAPI UI: `http://localhost:3000/docs`
 | `pnpm build` | Compile TypeScript |
 | `pnpm start` | Run production build |
 | `pnpm db:generate` | Generate migration from schema changes |
-| `pnpm db:migrate` | Apply migrations |
+| `pnpm db:migrate` | Apply migrations (local) |
+| `pnpm db:migrate:deploy` | Same command as Railway production start |
 | `pnpm test` | Run tests |
 | `pnpm lint` | ESLint |
 
@@ -37,7 +38,9 @@ OpenAPI UI: `http://localhost:3000/docs`
 
 Fastify + TypeScript + Drizzle + Postgres/PostGIS. Auth: Apple, Google, magic link (JWT). Media: Cloudflare R2.
 
-## Status
+## Deploy
+
+Push to `main` → GitHub CI (lint, test, migrations) → Railway auto-deploy → `db:migrate:deploy` then API start. See [docs/operations/railway.md](docs/operations/railway.md).
 
 - [x] Scaffold, health, config, OpenAPI, CI
 - [x] Auth (OAuth, magic link, JWT refresh)

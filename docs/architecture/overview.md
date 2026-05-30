@@ -30,7 +30,8 @@ src/
   db/migrations/
   lib/{config,crypto,errors}.ts
   lib/auth/oauth.ts
-  lib/email/magic-link.ts
+  lib/email/{client,service,index}.ts
+  lib/email/templates/{auth,notification,support,layout}.ts
   plugins/auth.ts
 ```
 
@@ -39,7 +40,47 @@ src/
 ### Providers
 
 1. **Apple / Google** : l'app envoie un `idToken`, le serveur vérifie la signature, upsert `auth_identities` + `users`.
-2. **Magic link** : email → token one-time → JWT. Pas de password.
+2. **Magic link** : email via Resend → lien vers `MAGIC_LINK_CALLBACK_URL` (app / site) → l'app **POST** le token à l'API. Pas de password.
+
+### Magic link (sécurité)
+
+| Mesure | Implémentation |
+|--------|----------------|
+| Token haute entropie | 48 chars (`nanoid`), jamais stocké en clair |
+| Hash en DB | Argon2 sur le token complet |
+| Lookup indexé | Préfixe SHA-256 (`lookup_hash`), pas de scan global |
+| One-time | `consumed_at` + update conditionnel (anti race) |
+| TTL court | 15 min (`MAGIC_LINK_TTL_MINUTES`) |
+| Un seul lien actif / email | Anciens tokens invalidés à chaque demande |
+| Anti prefetch email | Lien email → callback app (`joinayni.com/auth/magic-link`), **POST** `/verify` uniquement |
+| Rate limits | 5 demandes / 15 min, 20 verify / 15 min / IP |
+| Pas d'énumération | `POST /magic-link` renvoie toujours `{ sent: true }` |
+| Comptes multi-provider | Même email OAuth ↔ magic link → même `users` row, identities liées |
+
+Flow mobile :
+
+```
+Email → https://joinayni.com/auth/magic-link?token=…
+App (universal link) → POST /v1/auth/magic-link/verify { token }
+API → { accessToken, refreshToken, user }
+```
+
+Clients prévus : **web app** (page callback sur `joinayni.com`) + **Expo** (universal link + `expo-linking`). Même endpoint `POST /verify` pour les deux.
+
+`GET /v1/auth/magic-link/verify` : redirect legacy vers le callback (ne consomme pas le token).
+
+### Email (transactionnel)
+
+Module `src/lib/email/` — client Resend centralisé, templates HTML+texte, tags Resend par catégorie.
+
+| Méthode | Usage |
+|---------|-------|
+| `emailService.sendMagicLink` | Auth sign-in |
+| `emailService.sendNotification` | Match, alertes produit |
+| `emailService.sendSupportRequest` | Formulaire support (équipe + accusé user) |
+
+Env : `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO`, `EMAIL_SUPPORT_TO` (optionnel).
+En dev sans clé Resend : emails loggés en console (`[dev:email]`).
 
 ### Tables auth
 
@@ -61,9 +102,9 @@ Les users email n'ont pas de nom au signup. L'API renvoie `needsDisplayName: tru
 | Route | Body / notes |
 |-------|----------------|
 | `POST /v1/auth/oauth` | `{ provider: "apple"\|"google", idToken, inviteCode? }` |
-| `POST /v1/auth/magic-link` | `{ email }` — rate limit 5/15min |
-| `POST /v1/auth/magic-link/verify` | `{ token, inviteCode? }` |
-| `GET /v1/auth/magic-link/verify` | `?token=&inviteCode=` — pour liens email |
+| `POST /v1/auth/magic-link` | `{ email }` — rate limit 5/15min, toujours `{ sent: true }` |
+| `POST /v1/auth/magic-link/verify` | `{ token, inviteCode? }` — rate limit 20/15min |
+| `GET /v1/auth/magic-link/verify` | Redirect vers `MAGIC_LINK_CALLBACK_URL` (legacy, ne consomme pas) |
 | `POST /v1/auth/refresh` | `{ refreshToken }` |
 | `POST /v1/auth/logout` | `{ refreshToken }` |
 | `GET /v1/auth/me` | Bearer JWT |

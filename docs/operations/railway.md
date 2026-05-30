@@ -45,7 +45,17 @@ Required:
 | `AUTO_APPROVE_PHOTOS` | `true` (beta) |
 | `CORS_ORIGINS` | Public API URL |
 
-Optional (enable when ready): `RESEND_API_KEY`, `GOOGLE_CLIENT_ID`, R2 vars, `OPENAI_API_KEY`.
+Optional (enable when ready): `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO`, `GOOGLE_CLIENT_ID`, R2 vars, `OPENAI_API_KEY`.
+
+Email (Resend, domain `mail.joinayni.com`):
+
+| Variable | Value |
+|----------|-------|
+| `RESEND_API_KEY` | Resend API key (`re_...`) |
+| `EMAIL_FROM` | `noreply@mail.joinayni.com` |
+| `EMAIL_REPLY_TO` | `support@joinayni.com` (optional, user-facing replies) |
+| `EMAIL_SUPPORT_TO` | Inbox for support requests (defaults to `EMAIL_REPLY_TO`) |
+| `MAGIC_LINK_CALLBACK_URL` | Web/Expo callback, e.g. `https://joinayni.com/auth/magic-link` |
 
 Set via CLI:
 
@@ -57,9 +67,20 @@ railway variables set DATABASE_URL='${{Postgres.DATABASE_URL}}' API_BASE_URL=htt
 
 ## Migrations
 
-`railway.toml` runs `pnpm db:migrate:deploy && pnpm start` on each deploy.
+`railway.toml` runs `pnpm db:migrate:deploy && pnpm start` on **every deploy**.
+
+Push to `main` → Railway rebuilds → migrations apply before the API starts.
 
 `db:migrate:deploy` wraps `drizzle-kit migrate` with baseline retry when the DB already has tables but the migration journal is out of sync.
+
+When you add a migration locally:
+
+```bash
+pnpm db:generate          # after schema change in src/db/schema/
+pnpm db:migrate           # apply locally
+git add src/db/migrations/
+git commit && git push    # Railway applies 000N on next deploy
+```
 
 Manual / one-off:
 
