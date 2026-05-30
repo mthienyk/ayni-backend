@@ -6,7 +6,28 @@ Production URL: https://ayni-backend-production-d824.up.railway.app
 ## Services
 
 1. **ayni-backend** — Node API (`pnpm build`, migrate + start via `railway.toml`)
-2. **Postgres** — Railway Postgres plugin
+2. **Postgres** — Railway Postgres plugin (standard, no PostGIS)
+
+## Build (NODE_ENV + TypeScript)
+
+Railway sets `NODE_ENV=production` during the build. With pnpm, that skips `devDependencies`, so `tsc` was missing and `pnpm build` failed.
+
+**Fix in repo:**
+
+- `typescript` and `@types/node` are in `dependencies` (required at build time).
+- `railway.toml` runs install with `NODE_ENV=development` before `pnpm build` so eslint/vitest stay dev-only.
+
+Verify locally with a production-like install:
+
+```bash
+rm -rf node_modules
+NODE_ENV=production pnpm install --frozen-lockfile
+pnpm build
+```
+
+### JWT / Docker build warnings
+
+Railpack/Nixpacks may warn about `JWT_ACCESS_SECRET` or `JWT_REFRESH_SECRET` in build args or env. These are injected at **runtime** by Railway, not baked into the image. The warnings are harmless if secrets are set on the service, not in the Dockerfile.
 
 ## Environment variables (service `ayni-backend`)
 
@@ -38,9 +59,9 @@ railway variables set DATABASE_URL='${{Postgres.DATABASE_URL}}' API_BASE_URL=htt
 
 `railway.toml` runs `pnpm db:migrate:deploy && pnpm start` on each deploy.
 
-`db:migrate:deploy` wraps `drizzle-kit migrate`. If migrate fails because tables already exist but `drizzle.__drizzle_migrations` is empty or out of sync (common after a manual migrate or migration reset), it **baselines** the journal hashes when `public.users` exists, then retries once.
+`db:migrate:deploy` wraps `drizzle-kit migrate` with baseline retry when the DB already has tables but the migration journal is out of sync.
 
-Local / one-off:
+Manual / one-off:
 
 ```bash
 pnpm db:migrate              # strict drizzle-kit only
@@ -48,21 +69,33 @@ pnpm db:migrate:deploy       # same as production start
 railway run pnpm db:migrate:deploy
 ```
 
-Troubleshooting:
+If migrate fails on redeploy (hash mismatch), check `drizzle.__drizzle_migrations` in Postgres and compare with tags in `src/db/migrations/meta/_journal.json`.
 
-```sql
-SELECT id, left(hash, 12), created_at FROM drizzle.__drizzle_migrations ORDER BY created_at;
+## PostGIS decision tree
+
+The default Railway Postgres plugin **does not include PostGIS**. The current production schema uses `lat`/`lng` doubles and haversine distance in `zone.service.ts` so it runs on any Postgres.
+
+```
+Need PostGIS now?
+├─ No (beta / fastest path) → keep lat/lng (current default)
+│     • Works on Railway standard Postgres
+│     • Good enough for circular zones + nearby lookup
+│
+├─ Yes, stay on Railway → Option A: Railway PostGIS template
+│     1. Deploy https://railway.com/deploy/postgis (new Postgres service)
+│     2. Point `DATABASE_URL` to the PostGIS instance
+│     3. Fresh DB: run migrations (may need to drop old DB if switching)
+│     4. Restore geometry schema: users.home_location, items.location, zones.polygon
+│     5. Switch zone.service.ts to ST_Contains / ST_DWithin
+│
+└─ Yes, external DB → Option C: Neon or Supabase with PostGIS
+      • API stays on Railway; only `DATABASE_URL` changes
+      • Same schema migration steps as Option A
 ```
 
-If deploy still loops with exit code 1, compare journal tags in `src/db/migrations/meta/_journal.json` with the rows above. Do not delete migration SQL files that are already recorded in Postgres without a deliberate baseline plan.
+**Recommendation:** keep lat/lng until beta validates the product. When you need true polygons or PostGIS indexes, provision Railway PostGIS (Option A) or an external PostGIS host (Option C).
 
-## PostGIS
-
-The default Railway Postgres plugin **does not include PostGIS**. The MVP schema uses `lat`/`lng` columns instead of geometry types so it runs on any Postgres.
-
-For full PostGIS later, provision a [Railway PostGIS template](https://railway.com/deploy/postgis) and point `DATABASE_URL` to it, then restore geometry columns in the schema.
-
-Local dev with PostGIS remains optional via `docker compose` (`postgis/postgis` image).
+Local dev can still use PostGIS via `docker compose` (`postgis/postgis` image); the app schema matches standard Postgres for now.
 
 ## Health checks
 
@@ -91,3 +124,11 @@ pnpm job refresh-token-prune
 ## Backups
 
 Enable daily Postgres backups on Railway. Verify point-in-time recovery on your plan before production.
+
+## Deploy
+
+```bash
+railway link -p ayni-backend
+railway service ayni-backend
+railway up --detach
+```
