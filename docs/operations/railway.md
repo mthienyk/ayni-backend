@@ -36,15 +36,25 @@ railway variables set DATABASE_URL='${{Postgres.DATABASE_URL}}' API_BASE_URL=htt
 
 ## Migrations
 
-`railway.toml` runs `pnpm db:migrate && pnpm start` on each deploy.
+`railway.toml` runs `pnpm db:migrate:deploy && pnpm start` on each deploy.
 
-Migrations are also applied manually when needed:
+`db:migrate:deploy` wraps `drizzle-kit migrate`. If migrate fails because tables already exist but `drizzle.__drizzle_migrations` is empty or out of sync (common after a manual migrate or migration reset), it **baselines** the journal hashes when `public.users` exists, then retries once.
+
+Local / one-off:
 
 ```bash
-railway run pnpm db:migrate
+pnpm db:migrate              # strict drizzle-kit only
+pnpm db:migrate:deploy       # same as production start
+railway run pnpm db:migrate:deploy
 ```
 
-If migrate fails on redeploy (hash mismatch), check `drizzle.__drizzle_migrations` in Postgres.
+Troubleshooting:
+
+```sql
+SELECT id, left(hash, 12), created_at FROM drizzle.__drizzle_migrations ORDER BY created_at;
+```
+
+If deploy still loops with exit code 1, compare journal tags in `src/db/migrations/meta/_journal.json` with the rows above. Do not delete migration SQL files that are already recorded in Postgres without a deliberate baseline plan.
 
 ## PostGIS
 

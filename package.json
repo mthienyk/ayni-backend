@@ -12,6 +12,7 @@
     "start": "node dist/server.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:migrate:deploy": "node scripts/db-migrate.mjs",
     "db:studio": "drizzle-kit studio",
     "lint": "eslint src --max-warnings 0",
     "typecheck": "tsc --noEmit",
